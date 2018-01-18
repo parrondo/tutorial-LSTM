@@ -1,19 +1,28 @@
+# 1.1 Standard library importsimport sys
 import os
-import errno
 import sys
+import errno
 import h5py
 import cv2
 import glob
-import pandas as pd
+from datetime import datetime
+
+# 1.2 Related third party imports
 from pandas import read_csv
+from pandas import DataFrame
+from pandas import concat
 import numpy as np
 import parmap
 from shutil import copyfile
 from dotenv import find_dotenv, load_dotenv
 sys.path.append(os.path.join(os.path.dirname(__file__),"../app"))
 import requests
-#from pandas import read_csv
-from datetime import datetime
+from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import MinMaxScaler
+
+# 1.3 Local application/library specific imports
+# None
+
 
 def copy_new_downloaded_dataset(dataset_name, filename):
 
@@ -40,6 +49,7 @@ def copy_new_downloaded_dataset(dataset_name, filename):
         exit(1)
  
     print("\nFile copy done!\n")
+
 
 def download_new_dataset(filename):
 
@@ -72,28 +82,6 @@ def download_new_dataset(filename):
         f.write(r.content)
 
     return dataset_name
-
-
-def clean_train_data(data_file):
-
-    df = pd.read_csv(data_file)
-    df = df.set_index('id')
-    x = df.drop(['data_type', 'target', 'era'], 1)
-    y = df['target']
-    return x, y
-
-
-def split_val_test(data_file):
-    #split and clean data file which contains "validation" and "test" data_type
-    df = pd.read_csv(data_file)
-    df = df.set_index('id')
-    val = df[df.data_type == 'validation']
-    X_val = val.drop(['data_type', 'target', 'era'], 1)
-    y_val = val['target']
-    test = df[df.data_type == 'test']
-    X_test = test.drop(['data_type', 'target', 'era'], 1)
-
-    return X_val, y_val, X_test
 
 
 def parse(x):
@@ -132,7 +120,9 @@ def series_to_supervised(data, n_in=1, n_out=1, dropnan=True):
     # drop rows with NaN values
     if dropnan:
         agg.dropna(inplace=True)
+
     return agg
+
 
 def clean_data(filename):
 
@@ -162,8 +152,10 @@ def clean_data(filename):
     print(dataset.head(5))
     # save to interim data file
     dataset.to_csv(interim_data)
+    print("Raw data cleaned yet")
 
-    return "Raw data cleaned yet"
+    return
+
 
 def make_dataset(filename):
 
@@ -184,10 +176,10 @@ def make_dataset(filename):
     interim_dir = os.path.expanduser(os.environ.get("INTERIM_DIR"))
     processed_dir = os.path.expanduser(os.environ.get("PROCESSED_DIR"))
     #Full path filenames
-    raw_data = os.path.join(RAW_DIR, filename)
+    raw_data = os.path.join(raw_dir, filename)
     interim_data = os.path.join(interim_dir,"pollution.csv")
     #Clean data
-    clean_data()
+    clean_data(filename)
     # load dataset
     dataset = read_csv(interim_data, header=0, index_col=0)
     values = dataset.values
@@ -218,23 +210,9 @@ def make_dataset(filename):
     X_train = X_train.reshape((X_train.shape[0], 1, X_train.shape[1]))
     X_test = X_test.reshape((X_test.shape[0], 1, X_test.shape[1]))
     print(X_train.shape, y_train.shape, X_test.shape, y_test.shape)
+    print("Raw data processed yet")
 
-    print("Generating processed data ...from %s" % training_data)
-
-    x, y = clean_train_data(training_data)
-    x.to_csv(os.path.join(processed_dir, "x_train.csv"))
-    y.to_csv(os.path.join(processed_dir, "y_train.csv"))
-    print("Data now accessible at %s as csv files: x_train.csv, y_train.csv" % processed_dir)
-    print("Generating processed data ...from %s" % tournament_data)
-    X_val, y_val, X_test = split_val_test(tournament_data)
-    X_val.to_csv(os.path.join(processed_dir, "x_val.csv"))
-    y_val.to_csv(os.path.join(processed_dir, "y_val.csv"))
-    print("Data now accessible at %s as csv files: x_val.csv, y_val.csv" % processed_dir)
-    X_test.to_csv(os.path.join(processed_dir, "x_test.csv"))
-
-    print("Data now accessible at %s as csv files: x_test.csv" % processed_dir)
-
-    return "Raw data processed yet"
+    return X_train, y_train, X_test, y_test
  
 
 if __name__ == '__main__':
