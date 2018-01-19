@@ -163,12 +163,11 @@ def make_dataset(filename):
     Generate interim and processed data files from raw data file
     args: 
           filename (str) raw data filename. This file must be into the raw folder.
-          training_data (str) the file with training data
-          tournament_data (str) the file with both validation and test data
-          processed_dir (str) directory for processed data files
-    yields :
-           the following files into PROCESSED_DIR:
-           x_train.csv, y_train.csv, x_val.csv, y_val.csv, x_test.csv         
+
+    yields:
+           X_train (numpy ndarray), y_train (numpy ndarray),
+           X_test (numpy ndarray),  y_test (numpy ndarray),
+           scaler (sklearn MinMaxScaler)
     """
 
     #Directories
@@ -212,7 +211,7 @@ def make_dataset(filename):
     print(X_train.shape, y_train.shape, X_test.shape, y_test.shape)
     print("Raw data processed yet")
 
-    return X_train, y_train, X_test, y_test
+    return X_train, y_train, X_test, y_test, scaler
  
 
 if __name__ == '__main__':
